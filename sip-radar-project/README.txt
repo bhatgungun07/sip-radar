@@ -1,22 +1,54 @@
-# Sip Radar Website
+# Sip Radar
+### Discover Cafés. Explore Your City. Manage Your Budget.
 
-This is a ready-to-open website project.
+**Sip Radar** is a café discovery and budget-planning web application designed to simplify the way users explore cafés and manage their café-related expenses.
 
-## Open it on your Mac
+The platform brings together café discovery, personalised preferences and budget management through an interactive and user-friendly interface.
 
-1. Download `sip-radar-project.zip`.
-2. Open your **Downloads** folder.
-3. Double-click the ZIP file. A folder named `sip-radar-project` will be created.
-4. Open **VS Code**.
-5. Click **File → Open Folder...**
-6. Select the extracted `sip-radar-project` folder and click **Open**.
-7. In the VS Code left sidebar, click `index.html`.
-8. To view the website, either:
-   - double-click `index.html` in Finder, or
-   - in VS Code, right-click `index.html` and choose **Open with Live Server** (if the Live Server extension is installed).
+## Key Features
 
-You do not need to run terminal commands for this project.
+- **Café Discovery:** Explore cafés across multiple neighbourhoods in Mumbai.
+- **Search & Filters:** Find cafés based on location, budget, ambience and availability.
+- **Café Details:** View information such as estimated prices, opening hours, amenities and popular orders.
+- **Surprise Me:** Discover new cafés through a random café recommendation feature.
+- **Favourites:** Save and revisit preferred cafés.
+- **Budget Tracker:** Set a monthly budget, monitor expenses and track the remaining balance.
+- **Bill Splitter:** Calculate and divide café bills among multiple people.
+- **Maps & Navigation:** Access café locations and directions through map services.
+- **Theme Customisation:** Switch between light and dark display modes.
 
-## Important note about the demo data
+## Technology Stack
 
-The café names, prices, opening hours, ratings, and café details are sample/demo data, as stated on the website. The map artwork is stylised and not to scale. The map links open the approximate neighbourhood/café pin locations.
+- HTML5
+- CSS3
+- JavaScript (Vanilla JS)
+- Browser Local Storage
+
+## Project Objective
+
+The objective of Sip Radar is to create a convenient platform that combines local café discovery with practical expense-management tools.
+
+The project focuses on developing an interactive front-end experience while exploring core concepts of web development, JavaScript functionality, user interface design and browser-based data storage.
+
+## Getting Started
+
+1. Clone or download this repository.
+2. Open the project folder.
+3. Launch `index.html` in your web browser.
+4. Start exploring the application.
+
+No additional dependencies are required.
+
+## Project Information
+
+This project is a front-end demonstration. Café listings, ratings, prices and operating hours are illustrative sample data and may not represent verified real-time information. User preferences and activity are stored using browser Local Storage.
+
+## Developer
+
+**Gungun Bhat**  
+B.Tech – Information Technology  
+Usha Mittal Institute of Technology (UMIT)
+
+---
+
+*Developed as a personal web development project.*
