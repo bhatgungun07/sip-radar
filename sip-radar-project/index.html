@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{color-scheme:light}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Sip Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;900&family=Figtree:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: sticker-pop poster split into pages. Home (neighbourhood tiles) > neighbourhood (map + 12 cafés) > café (menu, bill, map links). Budget, Saved and Updates sit in the top nav. Soft sage, sand and rose accents on a calm stone background; everything stays quiet. */
+:root{
+  --bg:#F3F2EE; --card:#FFFFFF; --ink:#1E2420; --muted:#5F6A64; --line:#C9CEC7; --shadow:rgba(30,36,32,.10);
+  --pink:#7FB09C; --lime:#D3E2C6; --sun:#E7D3A1; --sky:#AFC8DA; --rose:#DDB5AB; --on-accent:#1E2420;
+  --good:#2E7D55; --warn:#A8630A; --crit:#B3363F;
+  --sea:#C3D9E6; --land:#F7F6F2; --road:#FFFFFF; --roadline:#DAD9D1; --park:#D2E4D2; --dot:#E0DFD8; --chip:#ECEBE6;
+  --font-display:'Unbounded','Arial Black',system-ui,sans-serif;
+  --font-body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'DM Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111513; --card:#1A201D; --ink:#ECEFEA; --muted:#9DA8A1; --line:#36403B; --shadow:rgba(0,0,0,.45);
+  --pink:#86B8A4; --lime:#B7CFA8; --sun:#D6C38E; --sky:#9FBDD1; --rose:#CFA298;
+  --good:#3DDC84; --warn:#FFB84D; --crit:#FF7B8E;
+  --sea:#1E3544; --land:#161B18; --road:#2A332F; --roadline:#38423D; --park:#22372B; --dot:#222925; --chip:#232A26; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111513; --card:#1A201D; --ink:#ECEFEA; --muted:#9DA8A1; --line:#36403B; --shadow:rgba(0,0,0,.45);
+  --pink:#86B8A4; --lime:#B7CFA8; --sun:#D6C38E; --sky:#9FBDD1; --rose:#CFA298;
+  --good:#3DDC84; --warn:#FFB84D; --crit:#FF7B8E;
+  --sea:#1E3544; --land:#161B18; --road:#2A332F; --roadline:#38423D; --park:#22372B; --dot:#222925; --chip:#232A26; color-scheme:dark}
+ 
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;line-height:1.08}
+h1:focus{outline:none}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.lab{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+ 
+/* nav */
+.nav{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding-block:16px}
+.logo{font-family:var(--font-display);font-weight:600;font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo i{width:22px;height:22px;border-radius:50%;background:var(--pink);border:1.5px solid var(--line);display:inline-block;box-shadow:inset -5px -5px 0 var(--lime)}
+.links{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center}
+.lt{display:grid;line-height:1.15}
+.by{font-family:var(--font-body);font-weight:400;font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.nl{padding:6px 0;border:0;border-bottom:2px solid transparent;background:none;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;color:var(--muted);border-radius:0}
+.nl:hover{color:var(--ink)}
+.nl[aria-current="page"]{color:var(--ink);border-bottom-color:var(--pink)}
+.nl .n{font-family:var(--font-mono);font-weight:500;margin-left:6px;background:var(--chip);border-radius:999px;padding:0 7px;font-size:12px}
+.nl.theme{border:1.5px solid var(--line);border-radius:999px;padding:5px 14px;background:var(--card);color:var(--ink)}
+ 
+/* shared parts */
+.back{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:6px 16px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px var(--shadow);margin-block:6px 14px}
+.panel{border:1.5px solid var(--line);background:var(--card);border-radius:20px;box-shadow:0 8px 24px var(--shadow);min-width:0}
+.pad{padding:18px;display:grid;gap:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:9px 14px;cursor:pointer;font-weight:700;text-decoration:none;box-shadow:0 2px 8px var(--shadow)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px var(--shadow)}
+.btn.pink{background:var(--pink);color:var(--on-accent)} .btn.lime{background:var(--lime);color:var(--on-accent)} .btn.sun{background:var(--sun);color:var(--on-accent)} .btn.sky{background:var(--sky);color:var(--on-accent)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--chip);border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:700;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--pink);color:var(--on-accent);box-shadow:0 2px 8px var(--shadow)}
+.chip.lime[aria-pressed="true"]{background:var(--lime)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{border:1.5px solid var(--line);border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;background:var(--chip)}
+.state{font-weight:700}.state.open{color:var(--good)}.state.closed{color:var(--crit)}
+.price{font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.sec{margin-top:36px;display:grid;gap:14px}
+.sec h2{font-size:clamp(22px,4vw,34px)}
+.sechead{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap}
+.field{display:grid;gap:4px;min-width:0;flex:1 1 180px}
+.input{width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);padding:9px 12px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--pink)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.controls{display:grid;gap:14px;border:1.5px solid var(--line);background:var(--card);border-radius:20px;padding:16px;box-shadow:0 8px 24px var(--shadow)}
+.empty{padding:24px;text-align:center;border:1.5px dashed var(--line);border-radius:18px}
+.foot{margin-top:34px;font-size:13px;color:var(--muted);max-width:72ch}
+ 
+/* hero */
+.hero{position:relative;padding-block:14px 6px}
+.hero h1{font-weight:600;font-size:clamp(38px,7.6vw,88px);letter-spacing:-.035em}
+.hero h1 span{display:inline-block;background:var(--lime);color:var(--on-accent);padding:0 .15em;border:1.5px solid var(--line);border-radius:.18em;box-shadow:0 8px 24px var(--shadow)}
+.hero p{max-width:54ch;font-size:17px;margin:18px 0 0;color:var(--muted)}
+.sticker{position:absolute;right:0;top:6px;width:112px;height:112px;border-radius:50%;background:var(--pink);color:var(--on-accent);border:1.5px solid var(--line);display:grid;place-items:center;text-align:center;font-family:var(--font-display);font-weight:600;font-size:13px;line-height:1.1;box-shadow:0 8px 24px var(--shadow)}
+.sticker b{font-size:28px;display:block}
+.marquee{margin-top:22px;border:1.5px solid var(--line);background:var(--sun);color:var(--on-accent);border-radius:14px;overflow:hidden;box-shadow:0 8px 24px var(--shadow)}
+.marquee div{display:flex;width:max-content;animation:slide 30s linear infinite;font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.08em;padding-block:9px}
+.marquee span{padding-inline:18px;white-space:nowrap}
+@keyframes slide{to{transform:translateX(-50%)}}
+ 
+/* home */
+.finder{display:grid;gap:10px}
+.hits{display:grid;gap:8px}
+.hit{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:14px;padding:9px 14px;text-decoration:none;background:var(--card)}
+.hit:hover{background:var(--lime);color:var(--on-accent)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.tile{display:grid;gap:10px;align-content:space-between;min-height:190px;border:1.5px solid var(--line);border-radius:22px;padding:18px;text-decoration:none;color:var(--on-accent);box-shadow:0 8px 24px var(--shadow);transition:transform .15s}
+.tile:hover{transform:translateY(-3px)}
+.tile.c0{background:var(--pink)}.tile.c1{background:var(--lime)}.tile.c2{background:var(--sun)}.tile.c3{background:var(--rose)}
+.tile h3{font-size:24px}
+.tile p{margin:6px 0 0;font-weight:600}
+.tile .st{display:flex;flex-wrap:wrap;gap:6px 12px;font-family:var(--font-mono);font-size:13px;font-weight:500}
+.tile .go{font-family:var(--font-display);font-weight:600;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{position:relative;display:grid;gap:8px;align-content:start;border:1.5px solid var(--line);background:var(--card);border-radius:18px;padding:14px;box-shadow:0 2px 8px var(--shadow)}
+.card:hover{background:var(--chip)}
+.card h3{font-size:16px;padding-right:34px}
+.card .stretch{text-decoration:none}
+.card .stretch::after{content:"";position:absolute;inset:0;border-radius:15px}
+.card .meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
+.card .bottom{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.heart{position:absolute;right:10px;top:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--chip);cursor:pointer;font-size:16px;line-height:1}
+.heart[aria-pressed="true"]{background:var(--pink);color:var(--on-accent)}
+.news{display:grid;gap:8px}
+.news ul{margin:0;padding-left:20px}
+ 
+/* area page */
+.ahead h1{font-weight:600;font-size:clamp(34px,6.5vw,64px);letter-spacing:-.03em}
+.ahead p{margin:10px 0 0;font-size:17px;color:var(--muted);max-width:56ch}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.stat{border:1.5px solid var(--line);border-radius:14px;padding:8px 14px;background:var(--card)}
+.stat b{display:block;font-family:var(--font-display);font-size:18px}
+.areagrid{margin-top:22px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:22px;align-items:start}
+.sticky{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+.mapbox{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:17px;max-width:100%}
+.mapbox svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.pin{position:absolute;transform:translate(-50%,-100%);display:block;border:1.5px solid var(--line);border-radius:999px 999px 999px 4px;padding:3px 9px;font-family:var(--font-mono);font-size:12px;color:var(--on-accent);box-shadow:0 2px 8px var(--shadow);white-space:nowrap;text-decoration:none}
+.pin.t1{background:var(--lime)}.pin.t2{background:var(--sun)}.pin.t3{background:var(--rose)}
+.pin:hover,.pin:focus-visible{z-index:6;transform:translate(-50%,-100%) scale(1.2)}
+.pin.dim{opacity:.22}
+.pin.on{z-index:5;transform:translate(-50%,-100%) scale(1.25);outline:3px solid var(--ink)}
+.maptag{position:absolute;left:10px;bottom:8px;font-family:var(--font-mono);font-size:11px;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:2px 8px}
+ 
+/* cafe page */
+.chead h1{font-weight:600;font-size:clamp(32px,6vw,58px);letter-spacing:-.03em}
+.chead .sub{margin-top:8px;font-size:17px;color:var(--muted)}
+.cgrid{margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.col{display:grid;gap:22px;min-width:0}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0}
+.facts dt{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:2px}
+.facts dd{margin:0}
+.menu{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.menu li{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:2px dashed var(--roadline);padding-bottom:8px}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:var(--chip);cursor:pointer;font-weight:700;line-height:1}
+.step output{min-width:18px;text-align:center}
+.bill{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:12px}
+.bill big{font-family:var(--font-display);font-size:24px;display:block}
+.split{display:flex;align-items:center;gap:8px}
+.split input{width:64px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);padding:5px 8px}
+ 
+/* budget */
+.bgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.num{border:1.5px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.num b{display:block;font-family:var(--font-display);font-size:19px;overflow-wrap:anywhere}
+.meter{height:26px;border:1.5px solid var(--line);border-radius:999px;background:var(--bg);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--good);width:0;transition:width .4s}
+.meter.warn i{background:var(--warn)}.meter.crit i{background:var(--crit)}
+.verdict{font-weight:700}.verdict.good{color:var(--good)}.verdict.warn{color:var(--warn)}.verdict.crit{color:var(--crit)}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(90px,140px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.bar .track{height:16px;border:1.5px solid var(--line);border-radius:999px;background:var(--bg);overflow:hidden}
+.bar .track i{display:block;height:100%;background:var(--pink)}
+.visits{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.visits li{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:2px dashed var(--roadline);padding-bottom:8px}
+.visits button{border:1.5px solid var(--line);background:var(--chip);border-radius:8px;cursor:pointer;padding:2px 8px}
+ 
+/* updates */
+.rel{display:grid;gap:10px;padding:20px}
+.rel header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.ver{background:var(--lime);color:var(--on-accent);border:1.5px solid var(--line);border-radius:999px;padding:2px 12px;font-family:var(--font-mono)}
+.rel ul{margin:0;padding-left:20px;display:grid;gap:4px}
+ 
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:20}
+ 
+@media (max-width:900px){
+  .areagrid,.cgrid,.bgrid{grid-template-columns:minmax(0,1fr)}
+  .sticky{position:static}
+  .sticker{position:static;margin-top:14px;}
+}
+@media (max-width:480px){.nums{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:90px minmax(0,1fr) auto}}
+@media (prefers-reduced-motion:reduce){.marquee div{animation:none}.meter i,.tile{transition:none}.btn:hover,.tile:hover{transform:none}}
+</style>
+</head>
+<body>
+ 
+<div class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="logo" href="#home"><i></i><span class="lt"><span>sip radar</span><span class="by">Gungun Bhat</span></span></a>
+    <div class="links" id="links"></div>
+  </nav>
+  <main id="app"></main>
+  <p class="foot"><b>Sip Radar · Gungun Bhat.</b> Café names, prices, hours and ratings are made-up sample data for this demo. Pins sit near the real neighbourhood, so the Google Maps and Apple Maps buttons open that area. Maps on this page are stylised and not to scale.</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+ 
+<script>
+(function(){
+  /* ================= data ================= */
+  function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function shuffle(a,R){for(var i=a.length-1;i>0;i--){var j=Math.floor(R()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+  var BASE={
+    filter:{n:'Filter coffee',p:120,t:'d'},cold:{n:'Cold coffee',p:180,t:'d'},matcha:{n:'Iced matcha',p:240,t:'d'},chai:{n:'Masala chai',p:70,t:'d'},cap:{n:'Cappuccino',p:170,t:'d'},
+    crois:{n:'Butter croissant',p:150,t:'f'},avo:{n:'Avocado toast',p:290,t:'f'},sand:{n:'Grilled sandwich',p:210,t:'f'},pasta:{n:'Creamy pasta',p:320,t:'f'},maggi:{n:'Masala maggi',p:110,t:'f'},brown:{n:'Walnut brownie',p:160,t:'f'},cheese:{n:'Baked cheesecake',p:230,t:'f'}
+  };
+  var DRINKS=['filter','cold','matcha','chai','cap'],FOODS=['crois','avo','sand','pasta','maggi','brown','cheese'];
+  var AREAS=[
+    {s:'bandra-west',n:'Bandra West',lat:19.0596,lng:72.8295,f:1.3,coast:1,bias:['aesthetic','date'],tag:'Pastel walls, sea breeze and a queue for everything.'},
+    {s:'khar',n:'Khar',lat:19.0700,lng:72.8350,f:1.25,bias:['aesthetic','date'],tag:'Lane cafés and long weekend brunches.'},
+    {s:'juhu',n:'Juhu',lat:19.1075,lng:72.8263,f:1.1,coast:1,bias:['outdoor','date'],tag:'Beach walks and iced coffee in the evening.'},
+    {s:'versova',n:'Versova',lat:19.1310,lng:72.8110,f:1.1,coast:1,bias:['outdoor','aesthetic'],tag:'Fishing-village lanes, indie cafés and sunset spots.'},
+    {s:'andheri-west',n:'Andheri West',lat:19.1197,lng:72.8464,f:1.0,bias:['work','study'],tag:'Freelancers, students and actors sharing tables.'},
+    {s:'powai',n:'Powai',lat:19.1176,lng:72.9060,f:.95,bias:['work','study'],tag:'Lake views and laptop-friendly corners.'},
+    {s:'santacruz',n:'Santacruz',lat:19.0810,lng:72.8410,f:.9,bias:['study','budget'],tag:'Quick stops that go easy on the wallet.'},
+    {s:'vile-parle',n:'Vile Parle',lat:19.0990,lng:72.8440,f:.8,bias:['study','budget'],tag:'Student-sized prices and long opening hours.'},
+    {s:'dadar',n:'Dadar',lat:19.0178,lng:72.8478,f:.7,bias:['budget','study'],tag:'Old-school chai meets new-school brews.'},
+    {s:'lower-parel',n:'Lower Parel',lat:18.9930,lng:72.8300,f:1.35,bias:['work','date'],tag:'Mill-compound cafés with premium prices.'},
+    {s:'colaba',n:'Colaba',lat:18.9067,lng:72.8147,f:1.2,coast:1,bias:['date','outdoor'],tag:'Heritage buildings, causeway strolls and big cups.'}
+  ];
+  var A1=['Lazy','Velvet','Golden','Sunday','Neon','Moody','Little','Pink','Salt','Honey','Paper','Midnight','Cosy','Wild','Blue','Dizzy','Mellow','Crisp','Tipsy','Soft','Daydream','Retro','Quiet','Smoky','Lucky'];
+  var A2=['Bean','Brew','Crumb','Sip','Cup','Corner','Pantry','Loft','Roastery','Table','Nook','Lab','Club','Garden','Studio','Counter','Kitchen','Room','Stop','Bar'];
+  var combos=[];A1.forEach(function(a){A2.forEach(function(b){combos.push(a+' '+b)})});
+  shuffle(combos,rng(7));
+  var BLURB={
+    aesthetic:['Pastel walls, hanging plants and a window seat made for photos.','Dried flowers on every table and soft lighting that flatters everyone.','A mirror wall, mismatched chairs and a latte-art counter.'],
+    date:['Low lamps, a corner sofa and a dessert menu built for sharing.','Candlelit tables and a playlist quiet enough to talk over.','Cosy two-seaters and a cheesecake that comes with two forks.'],
+    study:['Long wooden tables, a quiet back room and refills that never rush you.','A socket at almost every seat and no loud music after 6 pm.','Bookshelves, steady WiFi and staff who leave you to your notes.'],
+    work:['Fast WiFi, shared desks and a flat white that outlasts a meeting.','A phone-call booth at the back and a lunch menu under fifteen minutes.','Big tables, plenty of sockets and a standing counter for quick calls.'],
+    budget:['Honest prices, steel tumblers and a menu you can read in ten seconds.','Student-friendly portions and chai that refills for less.','No-fuss seating and a snack combo that stays under pocket money.'],
+    outdoor:['A leafy patio, ceiling fans and seats that catch the evening breeze.','Terrace seating with a view down the lane.','Garden tables under string lights, best after sunset.']
+  };
+  var BEST=['Quietest before 11 am','Busiest 5 to 8 pm','Calm on weekday afternoons','Packed on weekends, book ahead','Best at golden hour'];
+  var VK=['aesthetic','date','study','work','budget','outdoor'];
+  function price(c,id){return Math.round(BASE[id].p*c.f/5)*5}
+  function calcOne(c){var d=1e9,f=1e9;c.m.forEach(function(id){var p=price(c,id);if(BASE[id].t==='d')d=Math.min(d,p);else f=Math.min(f,p)});return d+f}
+ 
+  var CAFES=[],BYID={};
+  AREAS.forEach(function(a,ai){
+    var R=rng(100+ai*13),pts=[],list=[];
+    for(var i=0;i<12;i++){
+      var lat,lng,tries=0,ok;
+      do{lat=a.lat+(R()-.5)*.0084;lng=a.lng+(R()-.5)*.0084;ok=pts.every(function(p){return Math.hypot(p[0]-lat,p[1]-lng)>.0017});tries++}while(!ok&&tries<80);
+      pts.push([lat,lng]);
+      var c={id:a.s+'-'+(i<9?'0':'')+(i+1),ai:ai,a:a.n,as:a.s,n:combos.pop(),lat:lat,lng:lng,f:+(a.f*(.75+R()*.5)).toFixed(2),r:+(3.8+R()*1.0).toFixed(1),o:7+Math.floor(R()*5),c:21+Math.floor(R()*5)};
+      var v=[];v.push(R()<.65?a.bias[Math.floor(R()*a.bias.length)]:VK[Math.floor(R()*6)]);
+      var second=VK[Math.floor(R()*6)];if(v.indexOf(second)<0)v.push(second);
+      c.m=shuffle(DRINKS.slice(),R).slice(0,2+Math.floor(R()*2)).concat(shuffle(FOODS.slice(),R).slice(0,3+Math.floor(R()*2)));
+      c.p1=calcOne(c);
+      if(c.p1<260&&v.indexOf('budget')<0)v.push('budget');
+      c.v=v.slice(0,3);
+      c.b=BLURB[c.v[0]][Math.floor(R()*BLURB[c.v[0]].length)];
+      c.best=BEST[Math.floor(R()*BEST.length)];
+      var wk=c.v.indexOf('work')>=0||c.v.indexOf('study')>=0;
+      c.am=[];if(wk||R()<.5)c.am.push('WiFi');if(wk&&R()<.85)c.am.push('Power sockets');if(c.v.indexOf('outdoor')>=0||R()<.3)c.am.push('Outdoor seating');if(R()<.35)c.am.push('Pet friendly');c.am.push('UPI accepted');
+      c.sig=c.m.filter(function(id){return BASE[id].t==='f'})[0];
+      CAFES.push(c);BYID[c.id]=c;list.push(c);
+    }
+    a.list=list;
+    var ps=list.map(function(x){return x.p1});
+    a.min=Math.min.apply(null,ps);a.avg=Math.round(ps.reduce(function(s,x){return s+x},0)/ps.length/5)*5;
+  });
+  var AREA={};AREAS.forEach(function(a){AREA[a.s]=a});
+ 
+  var UPDATES=[
+    {v:'2.0',d:'5 Nov 2026',t:'Pages, not one long scroll',items:['Every neighbourhood now has its own page, and every café has its own page. Use Back to return.','12 cafés in each of 11 neighbourhoods, 132 in total.','New Saved page: tap the heart on any café. It also adds up what a day of your saved spots would cost.','New Surprise me button on Home and on each neighbourhood page.','Search across all cafés from the Home page.','A map for each neighbourhood, with pins that open the café page.','Café pages now show hours, best time to go, signature order and amenities like WiFi and sockets.','This Updates page.']},
+    {v:'1.0',d:'4 Nov 2026',t:'First version',items:['Stylised map with café pins and a price on each one.','Filters for vibe, max spend and open now.','Google Maps and Apple Maps buttons on every café.','Bill builder with a split-by-friends box.','Budget bestie: monthly budget, spend meter and visit log.']}
+  ];
+ 
+  /* ================= helpers ================= */
+  function rs(n){return '₹'+Math.round(n).toLocaleString('en-IN')}
+  function tier(c){return c.p1<250?1:c.p1<400?2:3}
+  function isOpen(c){var d=new Date(),h=d.getHours()+d.getMinutes()/60;if(h<c.o)h+=24;return h>=c.o&&h<c.c}
+  function fmtH(h){h=h%24;return (h%12||12)+(h>=12?' pm':' am')}
+  function cprice(c,id){return price(c,id)}
+  var $=function(id){return document.getElementById(id)};
+  var app=$('app');
+  function toast(t){var e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){e.hidden=true},2200)}
+ 
+  /* ================= state ================= */
+  var S={bud:3000,plan:4,visits:[],favs:[],bills:{},splits:{},af:null};
+  var KEY='sipradar-v2';
+  try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){S.bud=d.bud||S.bud;S.plan=d.plan||S.plan;S.visits=d.visits||[];S.favs=d.favs||[];}else throw 0}catch(e){
+    var day=864e5,now=Date.now();
+    S.visits=[{cafe:AREA['bandra-west'].list[0].n,mine:AREA['bandra-west'].list[0].p1+40,at:now-day,ex:1},{cafe:AREA['dadar'].list[0].n,mine:AREA['dadar'].list[0].p1,at:now-2*day,ex:1},{cafe:AREA['powai'].list[0].n,mine:AREA['powai'].list[0].p1+60,at:now-3*day,ex:1}];
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({bud:S.bud,plan:S.plan,visits:S.visits,favs:S.favs}))}catch(e){}}
+ 
+  /* ================= map ================= */
+  function decor(a){
+    var R=rng(500+a.s.length*31+a.lat*100),s='<defs><pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.6" fill="var(--dot)"/></pattern></defs><rect width="1000" height="1000" fill="var(--land)"/><rect width="1000" height="1000" fill="url(#dots)"/>';
+    function road(p){return '<polyline points="'+p+'" fill="none" stroke="var(--roadline)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><polyline points="'+p+'" fill="none" stroke="var(--road)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>'}
+    var k,y,x,p;
+    for(k=0;k<4;k++){x=190+R()*700;p='';for(y=0;y<=1000;y+=250)p+=(x+(R()-.5)*170).toFixed(0)+','+y+' ';s+=road(p)}
+    for(k=0;k<3;k++){var y0=150+R()*700;p='';for(x=0;x<=1000;x+=250)p+=x+','+(y0+(R()-.5)*170).toFixed(0)+' ';s+=road(p)}
+    for(k=0;k<2;k++)s+='<ellipse cx="'+(260+R()*560).toFixed(0)+'" cy="'+(120+R()*760).toFixed(0)+'" rx="'+(50+R()*40).toFixed(0)+'" ry="'+(34+R()*30).toFixed(0)+'" fill="var(--park)" stroke="var(--line)" stroke-width="2"/>';
+    if(a.coast){p='0,0';for(y=0;y<=1000;y+=125)p+=' '+(100+R()*70).toFixed(0)+','+y;p+=' 0,1000';s+='<polygon points="'+p+'" fill="var(--sea)" stroke="var(--line)" stroke-width="2" stroke-linejoin="round"/>'}
+    return '<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">'+s+'</svg>';
+  }
+  function pos(c){var a=AREAS[c.ai];return 'left:'+((c.lng-(a.lng-.005))/.01*100).toFixed(1)+'%;top:'+(((a.lat+.005)-c.lat)/.01*100).toFixed(1)+'%'}
+  function mapHtml(a,show,activeId){
+    var h=decor(a);
+    a.list.forEach(function(c){
+      var isOn=c.id===activeId,dim=activeId?!isOn:show.indexOf(c.id)<0;
+      h+='<a class="pin t'+tier(c)+(dim?' dim':'')+(isOn?' on':'')+'" href="#cafe-'+c.id+'" style="'+pos(c)+'" title="'+c.n+'" aria-label="'+c.n+', '+rs(c.p1)+' for one">'+rs(c.p1)+'</a>';
+    });
+    return h+'<div class="maptag">stylised map · '+a.n+'</div>';
+  }
+ 
+  /* ================= components ================= */
+  function cardHtml(c){
+    var op=isOpen(c),fav=S.favs.indexOf(c.id)>=0;
+    return '<article class="card"><button class="heart" type="button" data-fav="'+c.id+'" aria-pressed="'+fav+'" aria-label="Save '+c.n+'">'+(fav?'♥':'♡')+'</button>'+
+      '<h3><a class="stretch" href="#cafe-'+c.id+'">'+c.n+'</a></h3>'+
+      '<div class="meta muted"><span>'+c.a+'</span><span>★ '+c.r.toFixed(1)+'</span><span class="state '+(op?'open':'closed')+'">'+(op?'Open till '+fmtH(c.c):'Opens '+fmtH(c.o))+'</span></div>'+
+      '<div class="tags">'+c.v.map(function(v){return '<span class="tag">'+v+'</span>'}).join('')+'</div>'+
+      '<div class="bottom"><span class="lab">for one</span><span class="price">'+rs(c.p1)+'</span></div></article>';
+  }
+  function backBtn(label,parent){return '<button class="back" type="button" data-back="'+parent+'">← '+label+'</button>'}
+  function pick(arr,n){return arr.slice(0,n)}
+ 
+  /* ================= pages ================= */
+  function pageHome(){
+    var cheap=CAFES.slice().sort(function(a,b){return a.p1-b.p1||b.r-a.r}).slice(0,6);
+    var m=[];['BANDRA','KHAR','JUHU','VERSOVA','POWAI','DADAR','COLABA','LOWER PAREL','SANTACRUZ','VILE PARLE','ANDHERI','132 CAFÉS'].forEach(function(t){m.push('<span>'+t+' ✦</span>')});
+    var u=UPDATES[0];
+    return '<section class="hero"><h1>Find your<br><span>cafe</span> spot.</h1>'+
+      '<p>Pick a neighbourhood, choose a vibe, check what a drink and a bite really cost, then open it in Google Maps or Apple Maps.</p>'+
+      '<div class="sticker" aria-hidden="true"><div><b>₹</b>budget<br>proof</div></div>'+
+      '<div class="marquee" aria-hidden="true"><div>'+m.join('')+m.join('')+'</div></div></section>'+
+      '<section class="sec"><div class="controls finder"><div class="row"><div class="field"><label class="lab" for="hq">Search all 132 cafés</label><input class="input" id="hq" type="search" placeholder="Try a name, a neighbourhood or a vibe like study"></div>'+
+      '<button class="btn pink" type="button" data-surprise="all">Surprise me</button></div><div class="hits" id="hits"></div></div></section>'+
+      '<section class="sec"><div class="sechead"><h2>Pick a neighbourhood</h2><span class="muted mono">11 areas · 12 cafés each</span></div><div class="tiles">'+
+      AREAS.map(function(a,i){return '<a class="tile c'+(i%4)+'" href="#area-'+a.s+'"><div><h3>'+a.n+'</h3><p>'+a.tag+'</p></div><div><div class="st"><span>12 cafés</span><span>from '+rs(a.min)+'</span><span>avg '+rs(a.avg)+'</span></div><div class="go" style="margin-top:8px">Open →</div></div></a>'}).join('')+'</div></section>'+
+      '<section class="sec"><div class="sechead"><h2>Cheapest for one</h2><a class="btn" href="#budget">Plan my budget</a></div><div class="cards">'+cheap.map(cardHtml).join('')+'</div></section>'+
+      '<section class="sec"><div class="panel pad news"><div class="sechead"><h2 style="font-size:22px">What is new</h2><span class="ver">v'+u.v+' · '+u.d+'</span></div><ul>'+pick(u.items,3).map(function(i){return '<li>'+i+'</li>'}).join('')+'</ul><div><a class="btn lime" href="#updates">See all updates</a></div></div></section>';
+  }
+  function areaFiltered(a){
+    var f=S.af,q=f.q.trim().toLowerCase();
+    var out=a.list.filter(function(c){
+      if(f.vibe!=='all'&&c.v.indexOf(f.vibe)<0)return false;
+      if(c.p1>f.maxp)return false;
+      if(f.open&&!isOpen(c))return false;
+      if(q&&c.n.toLowerCase().indexOf(q)<0)return false;
+      return true;
+    });
+    out.sort(function(x,y){return f.sort==='cheap'?x.p1-y.p1:f.sort==='dear'?y.p1-x.p1:f.sort==='az'?x.n.localeCompare(y.n):y.r-x.r});
+    return out;
+  }
+  function pageArea(a){
+    S.af={q:'',vibe:'all',maxp:800,open:false,sort:'rate'};
+    var vib=[['all','All vibes']].concat(VK.map(function(v){return [v,v.charAt(0).toUpperCase()+v.slice(1)]}));
+    return backBtn('All neighbourhoods','#home')+
+      '<section class="ahead"><h1>'+a.n+'</h1><p>'+a.tag+'</p><div class="stats"><div class="stat"><span class="lab">Cafés</span><b>12</b></div><div class="stat"><span class="lab">Cheapest for one</span><b>'+rs(a.min)+'</b></div><div class="stat"><span class="lab">Average for one</span><b>'+rs(a.avg)+'</b></div></div></section>'+
+      '<section class="sec"><div class="controls"><div class="row"><div class="field"><label class="lab" for="aq">Search in '+a.n+'</label><input class="input" id="aq" type="search" placeholder="Café name"></div>'+
+      '<div class="field"><label class="lab" for="asort">Sort by</label><select class="input" id="asort"><option value="rate">Top rated</option><option value="cheap">Cheapest first</option><option value="dear">Priciest first</option><option value="az">A to Z</option></select></div></div>'+
+      '<div class="row"><div class="field"><label class="lab" for="amax">Max for one: <b class="mono" id="amaxv">₹800+</b></label><input id="amax" type="range" min="100" max="800" step="25" value="800"></div>'+
+      '<button class="chip lime" id="aopen" type="button" aria-pressed="false" data-aopen="1">Open now</button><button class="btn pink" type="button" data-surprise="'+a.s+'">Surprise me</button></div>'+
+      '<div class="chips" id="avibes">'+vib.map(function(v){return '<button class="chip" type="button" data-avibe="'+v[0]+'" aria-pressed="'+(v[0]==='all')+'">'+v[1]+'</button>'}).join('')+'</div></div></section>'+
+      '<section class="areagrid"><div class="panel sticky"><div class="mapbox" id="amap"></div></div><div><div class="sechead" style="margin-bottom:12px"><h2 style="font-size:20px">Cafés in '+a.n+'</h2><span class="muted mono" id="acount"></span></div><div class="cards" id="acards"></div></div></section>';
+  }
+  function updateArea(a){
+    var r=areaFiltered(a);
+    $('amap').innerHTML=mapHtml(a,r.map(function(c){return c.id}),null);
+    $('acount').textContent=r.length+' of 12';
+    $('acards').innerHTML=r.length?r.map(cardHtml).join(''):'<div class="empty" style="grid-column:1/-1"><b>Nothing matches.</b><br>Raise the max price, change the vibe or turn off Open now.</div>';
+    $('amaxv').textContent=rs(S.af.maxp)+(S.af.maxp>=800?'+':'');
+  }
+  function billTotal(c){var b=S.bills[c.id]||{},t=0;Object.keys(b).forEach(function(id){t+=b[id]*price(c,id)});return t}
+  function billHtml(c){
+    var b=S.bills[c.id]||{},tot=billTotal(c),sp=S.splits[c.id]||1;
+    return '<div><div class="lab" style="margin-bottom:8px">Menu · tap + to build your bill</div><ul class="menu">'+
+      c.m.map(function(id){var q=b[id]||0;return '<li><span>'+BASE[id].n+'</span><span class="step"><span class="price">'+rs(price(c,id))+'</span><button type="button" data-dec="'+id+'" aria-label="Remove one '+BASE[id].n+'">−</button><output>'+q+'</output><button type="button" data-inc="'+id+'" aria-label="Add one '+BASE[id].n+'">+</button></span></li>'}).join('')+'</ul></div>'+
+      '<div class="bill"><div><span class="lab">Bill</span><big class="mono">'+rs(tot)+'</big></div><div class="split"><label class="lab" for="split">Split by</label><input id="split" type="number" min="1" max="12" value="'+sp+'"></div><div><span class="lab">Your share</span><big class="mono" id="share">'+rs(tot/sp)+'</big></div></div>'+
+      '<div class="btns"><button class="btn lime" type="button" data-log="'+c.id+'"'+(tot?'':' disabled')+'>Log this visit to my budget</button><a class="btn" href="#budget">Open budget</a></div>';
+  }
+  function pageCafe(c){
+    var a=AREAS[c.ai],op=isOpen(c),fav=S.favs.indexOf(c.id)>=0;
+    var g='https://www.google.com/maps/search/?api=1&query='+c.lat.toFixed(5)+','+c.lng.toFixed(5);
+    var ap='https://maps.apple.com/?ll='+c.lat.toFixed(5)+','+c.lng.toFixed(5)+'&q='+encodeURIComponent(c.n);
+    var gd='https://www.google.com/maps/dir/?api=1&destination='+c.lat.toFixed(5)+','+c.lng.toFixed(5);
+    var apd='https://maps.apple.com/?daddr='+c.lat.toFixed(5)+','+c.lng.toFixed(5);
+    var more=a.list.filter(function(x){return x.id!==c.id}).sort(function(x,y){return Math.abs(x.p1-c.p1)-Math.abs(y.p1-c.p1)}).slice(0,3);
+    return backBtn(a.n,'#area-'+a.s)+
+      '<section class="chead"><div class="tags" style="margin-bottom:10px">'+c.v.map(function(v){return '<span class="tag">'+v+'</span>'}).join('')+'</div><h1>'+c.n+'</h1><div class="sub">'+a.n+' · ★ '+c.r.toFixed(1)+' · <span class="state '+(op?'open':'closed')+'">'+(op?'Open till '+fmtH(c.c):'Closed, opens '+fmtH(c.o))+'</span></div></section>'+
+      '<section class="cgrid"><div class="col">'+
+        '<div class="panel pad"><p style="margin:0;font-size:17px">'+c.b+'</p>'+
+        '<div class="btns"><a class="btn pink" href="'+g+'" target="_blank" rel="noopener">Open in Google Maps</a><a class="btn sun" href="'+ap+'" target="_blank" rel="noopener">Open in Apple Maps</a></div>'+
+        '<div class="btns"><a class="btn" href="'+gd+'" target="_blank" rel="noopener">Directions · Google</a><a class="btn" href="'+apd+'" target="_blank" rel="noopener">Directions · Apple</a><button class="btn sky" type="button" data-fav="'+c.id+'" aria-pressed="'+fav+'">'+(fav?'♥ Saved':'♡ Save')+'</button></div>'+
+        '<dl class="facts"><dt>For one</dt><dd><b class="price">'+rs(c.p1)+'</b> for the cheapest drink plus bite</dd><dt>Hours</dt><dd>'+fmtH(c.o)+' to '+fmtH(c.c)+'</dd><dt>Best time</dt><dd>'+c.best+'</dd><dt>Signature</dt><dd>'+BASE[c.sig].n+' · '+rs(price(c,c.sig))+'</dd><dt>Amenities</dt><dd>'+c.am.join(' · ')+'</dd></dl></div>'+
+        '<div class="panel"><div class="mapbox" id="cmap">'+mapHtml(a,[],c.id)+'</div></div></div>'+
+        '<div class="col"><div class="panel pad" id="billbox">'+billHtml(c)+'</div></div></section>'+
+      '<section class="sec"><div class="sechead"><h2>More in '+a.n+'</h2><a class="btn" href="#area-'+a.s+'">See all 12</a></div><div class="cards">'+more.map(cardHtml).join('')+'</div></section>';
+  }
+  function pageSaved(){
+    var l=S.favs.map(function(id){return BYID[id]}).filter(Boolean),t=l.reduce(function(s,c){return s+c.p1},0);
+    return '<section class="ahead"><h1>Saved</h1><p>Your hearted cafés. Tap the heart on any card to add one.</p></section>'+
+      (l.length?'<section class="sec"><div class="panel pad"><div class="lab">A day visiting all '+l.length+' would cost about</div><div class="price" style="font-size:28px;font-family:var(--font-display)">'+rs(t)+'</div><div class="muted">One drink and one bite at each, for one person.</div></div><div class="cards">'+l.map(cardHtml).join('')+'</div></section>':
+      '<section class="sec"><div class="empty"><b>Nothing saved yet.</b><br>Open a neighbourhood and tap the heart on a café you like.<div class="btns" style="justify-content:center;margin-top:14px"><a class="btn lime" href="#home">Browse neighbourhoods</a><button class="btn pink" type="button" data-surprise="all">Surprise me</button></div></div></section>');
+  }
+  function pageBudget(){
+    return '<section class="ahead"><h1>Budget bestie</h1><p>Set what you can spend on cafés this month. Every visit you log from a café page comes off it.</p></section>'+
+      '<section class="sec"><div class="bgrid"><div class="panel pad">'+
+      '<div class="row"><div class="field"><label class="lab" for="bud">Café budget this month (₹)</label><input class="input mono" id="bud" type="number" min="0" step="100" value="'+S.bud+'"></div><div class="field"><label class="lab" for="plan">Visits you plan</label><input class="input mono" id="plan" type="number" min="1" max="30" value="'+S.plan+'"></div></div>'+
+      '<div class="nums"><div class="num"><span class="lab">Spent</span><b id="nSpent"></b></div><div class="num"><span class="lab">Left</span><b id="nLeft"></b></div><div class="num"><span class="lab">Per visit</span><b id="nPer"></b></div></div>'+
+      '<div class="meter" id="meter" role="progressbar" aria-label="Share of monthly budget spent" aria-valuemin="0" aria-valuemax="100"><i id="meterFill"></i></div><div class="verdict" id="verdict"></div></div>'+
+      '<div class="panel pad"><h3 style="font-size:18px">Where it went</h3><div class="bars" id="bars"></div><h3 style="font-size:18px">Visit log</h3><ul class="visits" id="visits"></ul><div><button class="btn" type="button" data-clear="1">Clear log</button></div></div></div></section>'+
+      '<section class="sec"><div class="sechead"><h2>Cafés that fit</h2><span class="muted mono" id="fitnote"></span></div><div class="cards" id="fits"></div></section>';
+  }
+  function monthSpent(){var d=new Date(),t=0;S.visits.forEach(function(v){var x=new Date(v.at);if(x.getMonth()===d.getMonth()&&x.getFullYear()===d.getFullYear())t+=v.mine});return t}
+  function renderBudget(){
+    var spent=monthSpent(),left=S.bud-spent,per=S.plan>0?Math.max(left,0)/S.plan:0,pct=S.bud>0?spent/S.bud*100:(spent>0?101:0);
+    $('nSpent').textContent=rs(spent);$('nLeft').textContent=(left<0?'−':'')+rs(Math.abs(left));$('nPer').textContent=rs(per);
+    var cls=pct>100?'crit':pct>=70?'warn':'good';
+    $('meter').className='meter '+(cls==='good'?'':cls);$('meterFill').style.width=Math.min(pct,100)+'%';$('meter').setAttribute('aria-valuenow',Math.round(Math.min(pct,100)));
+    var d=new Date(),dl=new Date(d.getFullYear(),d.getMonth()+1,0).getDate()-d.getDate();
+    $('verdict').className='verdict '+cls;
+    $('verdict').textContent=pct>100?'Over budget by '+rs(spent-S.bud)+'. Try a chai-only week.':pct>=70?Math.round(pct)+'% used with '+dl+' days left. Pick cheaper spots.':Math.round(pct)+'% used with '+dl+' days left. You are on track.';
+    var by={};S.visits.forEach(function(v){by[v.cafe]=(by[v.cafe]||0)+v.mine});
+    var names=Object.keys(by).sort(function(a,b){return by[b]-by[a]}),mx=Math.max.apply(null,names.map(function(n){return by[n]}).concat([1]));
+    $('bars').innerHTML=names.length?names.map(function(n){return '<div class="bar"><span>'+n+'</span><span class="track"><i style="width:'+by[n]/mx*100+'%"></i></span><span class="mono">'+rs(by[n])+'</span></div>'}).join(''):'<span class="muted">No visits yet. Build a bill at any café and log it.</span>';
+    $('visits').innerHTML=S.visits.slice().sort(function(a,b){return b.at-a.at}).map(function(v){var i=S.visits.indexOf(v),dt=new Date(v.at).toLocaleDateString('en-IN',{day:'numeric',month:'short'});return '<li><span>'+v.cafe+' <span class="muted">· '+dt+(v.ex?' · example':'')+'</span></span><span><span class="mono">'+rs(v.mine)+'</span> <button type="button" data-del="'+i+'" aria-label="Delete visit">✕</button></span></li>'}).join('')||'<li class="muted">Empty</li>';
+    var fits=CAFES.filter(function(c){return c.p1<=per}).sort(function(a,b){return b.r-a.r||a.p1-b.p1}).slice(0,9);
+    $('fitnote').textContent='up to '+rs(per)+' for one';
+    $('fits').innerHTML=fits.length?fits.map(cardHtml).join(''):'<div class="empty" style="grid-column:1/-1"><b>Nothing fits yet.</b><br>Raise the budget or plan fewer visits.</div>';
+  }
+  function pageUpdates(){
+    return '<section class="ahead"><h1>Updates</h1><p>Everything that changed on Sip Radar, newest first.</p></section><section class="sec">'+
+      UPDATES.map(function(u){return '<article class="panel rel"><header><h2 style="font-size:22px">'+u.t+'</h2><span class="ver">v'+u.v+' · '+u.d+'</span></header><ul>'+u.items.map(function(i){return '<li>'+i+'</li>'}).join('')+'</ul></article>'}).join('')+
+      '<article class="panel rel"><header><h2 style="font-size:22px">Coming next</h2><span class="ver">idea list</span></header><ul><li>Live café data from OpenStreetMap when this runs as its own website, since this page cannot fetch outside data.</li><li>Your own reviews and photos for each café.</li><li>A weekly budget view and a share button for your saved list.</li></ul></article></section>';
+  }
+ 
+  /* ================= router ================= */
+  var stack=[];
+  var CURP='home';
+  function getTheme(){return document.documentElement.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
+  function nav(cur){
+    var items=[['home','Home'],['budget','Budget'],['saved','♡ Saved'],['updates','Updates']];
+    $('links').innerHTML=items.map(function(i){return '<a class="nl" href="#'+i[0]+'"'+(cur===i[0]?' aria-current="page"':'')+'>'+i[1]+(i[0]==='saved'?'<span class="n">'+S.favs.length+'</span>':'')+'</a>'}).join('')+'<button class="nl theme" id="themeBtn" type="button" aria-label="Switch to '+(getTheme()==='dark'?'light':'dark')+' theme">◐ '+(getTheme()==='dark'?'Light':'Dark')+'</button>';
+  }
+  function render(){
+    var h=location.hash.replace(/^#/,''),cur='home',html='',post=null,m;
+    if(h==='budget'){cur='budget';html=pageBudget();post=function(){renderBudget()}}
+    else if(h==='saved'){cur='saved';html=pageSaved()}
+    else if(h==='updates'){cur='updates';html=pageUpdates()}
+    else if((m=h.match(/^area-(.+)$/))&&AREA[m[1]]){cur='area';var a=AREA[m[1]];html=pageArea(a);post=function(){updateArea(a)}}
+    else if((m=h.match(/^cafe-(.+)$/))&&BYID[m[1]]){cur='cafe';html=pageCafe(BYID[m[1]])}
+    else{html=pageHome()}
+    CURP=cur;app.innerHTML=html;nav(cur);if(post)post();
+    window.scrollTo(0,0);var t=app.querySelector('h1');if(t){t.setAttribute('tabindex','-1');t.focus({preventScroll:true})}
+  }
+  function track(){
+    var r=location.hash||'#home';
+    if(stack.length>1&&stack[stack.length-2]===r)stack.pop();else if(stack[stack.length-1]!==r)stack.push(r);
+  }
+  window.addEventListener('hashchange',function(){track();render()});
+  track();
+ 
+  /* ================= events ================= */
+  function curCafe(){var m=location.hash.match(/^#cafe-(.+)$/);return m&&BYID[m[1]]}
+  function curArea(){var m=location.hash.match(/^#area-(.+)$/);return m&&AREA[m[1]]}
+  document.addEventListener('click',function(e){
+    var t=e.target,b;
+    if((b=t.closest('[data-back]'))){if(stack.length>1)history.back();else location.hash=b.dataset.back;return}
+    if((b=t.closest('[data-surprise]'))){
+      var pool=b.dataset.surprise==='all'?CAFES:AREA[b.dataset.surprise].list;
+      location.hash='#cafe-'+pool[Math.floor(Math.random()*pool.length)].id;return}
+    if((b=t.closest('[data-fav]'))){
+      var id=b.dataset.fav,i=S.favs.indexOf(id);if(i<0){S.favs.push(id);toast('Saved')}else{S.favs.splice(i,1);toast('Removed from Saved')}
+      save();
+      var on=S.favs.indexOf(id)>=0;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-fav="'+id+'"]'),function(x){x.setAttribute('aria-pressed',on);x.textContent=x.classList.contains('heart')?(on?'♥':'♡'):(on?'♥ Saved':'♡ Save')});
+      if(location.hash==='#saved')render();else nav(CURP);
+      return}
+    if((b=t.closest('[data-inc]'))){var c=curCafe(),bl=S.bills[c.id]=S.bills[c.id]||{};bl[b.dataset.inc]=(bl[b.dataset.inc]||0)+1;$('billbox').innerHTML=billHtml(c);return}
+    if((b=t.closest('[data-dec]'))){var c2=curCafe(),bl2=S.bills[c2.id]=S.bills[c2.id]||{};bl2[b.dataset.dec]=Math.max(0,(bl2[b.dataset.dec]||0)-1);$('billbox').innerHTML=billHtml(c2);return}
+    if((b=t.closest('[data-log]'))){
+      var c3=BYID[b.dataset.log],tot=billTotal(c3),sp=S.splits[c3.id]||1;if(!tot)return;
+      S.visits.push({cafe:c3.n,mine:Math.round(tot/sp),at:Date.now()});save();S.bills[c3.id]={};S.splits[c3.id]=1;$('billbox').innerHTML=billHtml(c3);toast('Logged. Budget updated.');return}
+    if((b=t.closest('[data-del]'))){S.visits.splice(+b.dataset.del,1);save();renderBudget();return}
+    if(t.closest('[data-clear]')){S.visits=[];save();renderBudget();return}
+    if((b=t.closest('[data-avibe]'))){S.af.vibe=b.dataset.avibe;Array.prototype.forEach.call($('avibes').children,function(x){x.setAttribute('aria-pressed',x===b)});updateArea(curArea());return}
+    if(t.closest('[data-aopen]')){S.af.open=!S.af.open;$('aopen').setAttribute('aria-pressed',S.af.open);updateArea(curArea());return}
+    if(t.closest('#themeBtn')){document.documentElement.setAttribute('data-theme',getTheme()==='dark'?'light':'dark');nav(CURP);$('themeBtn').focus()}
+  });
+  document.addEventListener('input',function(e){
+    var id=e.target.id;
+    if(id==='hq'){
+      var q=e.target.value.trim().toLowerCase(),box=$('hits');
+      if(!q){box.innerHTML='';return}
+      var r=CAFES.filter(function(c){return (c.n+' '+c.a+' '+c.v.join(' ')).toLowerCase().indexOf(q)>=0}).slice(0,8);
+      box.innerHTML=r.length?r.map(function(c){return '<a class="hit" href="#cafe-'+c.id+'"><span><b>'+c.n+'</b> <span class="muted">· '+c.a+'</span></span><span class="price">'+rs(c.p1)+'</span></a>'}).join(''):'<div class="muted">No café matches that. Try a neighbourhood name.</div>';
+    }
+    if(id==='aq'){S.af.q=e.target.value;updateArea(curArea())}
+    if(id==='amax'){S.af.maxp=+e.target.value;updateArea(curArea())}
+    if(id==='split'){var c=curCafe();S.splits[c.id]=Math.max(1,Math.min(12,parseInt(e.target.value,10)||1));$('share').textContent=rs(billTotal(c)/S.splits[c.id])}
+    if(id==='bud'){S.bud=Math.max(0,+e.target.value||0);save();renderBudget()}
+    if(id==='plan'){S.plan=Math.max(1,+e.target.value||1);save();renderBudget()}
+  });
+  document.addEventListener('change',function(e){if(e.target.id==='asort'){S.af.sort=e.target.value;updateArea(curArea())}});
+ 
+  render();
+})();
+</script>
+ 
+</body>
+</html>
+ 
